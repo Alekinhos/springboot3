@@ -54,4 +54,14 @@ public class ProductController {
         BeanUtils.copyProperties(productRecordDto, productModel); //copia as propriedades de um objeto para outro objeto nesse caso do productRecordDto para o productModel
         return ResponseEntity.status(HttpStatus.OK).body(productRepository.save(productModel));
     }
+
+    @DeleteMapping("/products/{id}") //Delete = deleta o produto
+    public ResponseEntity<Void> deleteProduct(@PathVariable(value="id") UUID id) {
+        Optional<ProductModel> productModelOptional = productRepository.findById(id); // Verificar se o produto existe
+        if(productModelOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);//Se não existir retorna o status 404 not found
+        }
+        productRepository.delete(productModelOptional.get()); // Utilizando o metodo JPA delete para deletar o produto
+        return ResponseEntity.status(HttpStatus.NO_CONTENT).body(null);
+    }
 }
