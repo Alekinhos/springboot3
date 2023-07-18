@@ -16,6 +16,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
+
 @RestController
 public class ProductController {
 
@@ -29,9 +32,17 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.CREATED).body(productRepository.save(productModel)); //retorna o status 201 created e o produto salvo visto que o produto foi salvo com sucesso
     }
 
+
     @GetMapping("/products")//Get = pega todos os produtos
     public ResponseEntity<List<ProductModel>> getAllProducts() {
-        return ResponseEntity.status(HttpStatus.OK).body(productRepository.findAll()); //retorna o status 200 ok e todos os produtos, lista de todos os produtos
+        List<ProductModel> productList = productRepository.findAll();
+        if(!productList.isEmpty()) {
+            for(ProductModel product : productList) {
+                UUID id = product.getId();
+                product.add(linkTo(methodOn(ProductController.class).getOneProduct(id)).withSelfRel());// LinkTo qual endpoint ou metodo que eu vou redirecionar o cliente/methodoOn = metodo que eu quero redirecionar o cliente
+            }
+        }
+        return ResponseEntity.status(HttpStatus.OK).body(productList); //retorna o status 200 ok e todos os produtos, lista de todos os produtos
     }
 
     @GetMapping("/products/{id}")//Get = pega o produto
@@ -41,6 +52,7 @@ public class ProductController {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+        productModelOptional.get().add(linkTo(methodOn(ProductController.class).getAllProducts()).withRel("Lista de Produtos"));// LinkTo qual endpoint ou metodo que eu vou redirecionar o cliente/methodoOn = metodo que eu quero redirecionar o cliente
         return ResponseEntity.status(HttpStatus.OK).body(productModelOptional.get());
     }
 
