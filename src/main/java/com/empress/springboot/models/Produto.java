@@ -1,7 +1,7 @@
 package com.empress.springboot.models;
 
 import jakarta.persistence.*;
-import org.springframework.hateoas.RepresentationModel;
+
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "tb_produto")
-public class Produto extends RepresentationModel<Produto> implements java.io.Serializable {
+public class Produto implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
     @Id

@@ -7,6 +7,10 @@ import com.empress.springboot.repositories.ProdutoRepository;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,7 +31,7 @@ public class ProductController {
     @Autowired
     private ProdutoRepository produtoRepository;
 
-    @CrossOrigin(origins = "http://127.0.0.1:5173") // Insira a origem permitida, substituindo o exemplo pelo seu frontend
+    @CrossOrigin(origins = {"http://127.0.0.1:5173","http://127.0.0.1:5174"}) // Insira a origem permitida, substituindo o exemplo pelo seu frontend
     @PostMapping("/products") //Inseri um produto / URI - Uniform Resource Identifier - Identificador Uniforme de Recursos
     public ResponseEntity<Produto> saveProduct(@RequestBody @Valid ProdutoRecordDto produtoRecordDto) {
       var productModel = new Produto(); //var = ProductModel para n ter que escrever a classe dos dois lados
@@ -36,20 +40,19 @@ public class ProductController {
     }
 
 
-    @CrossOrigin(origins = "http://127.0.0.1:5173") // Insira a origem permitida, substituindo o exemplo pelo seu frontend
+    @CrossOrigin(origins = {"http://127.0.0.1:5173","http://127.0.0.1:5174"}) // Insira a origem permitida, substituindo o exemplo pelo seu frontend
     @GetMapping("/products")//Get = pega todos os produtos
-    public ResponseEntity<List<Produto>> getAllProducts() {
-        List<Produto> productList = produtoRepository.findAll();
-        if(!productList.isEmpty()) {
-            for(Produto product : productList) {
-                UUID id = product.getId();
-                product.add(linkTo(methodOn(ProductController.class).getOneProduct(id)).withSelfRel());// LinkTo qual endpoint ou metodo que eu vou redirecionar o cliente/methodoOn = metodo que eu quero redirecionar o cliente
-            }
-        }
-        return ResponseEntity.status(HttpStatus.OK).body(productList); //retorna o status 200 ok e todos os produtos, lista de todos os produtos
+    public ResponseEntity<List<Produto>> getAllProducts(@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "6") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        HttpHeaders responseHeaders = new HttpHeaders();
+        responseHeaders.set("x-total-pages", String.valueOf(produtoRepository.findAll(pageable).getTotalPages()));
+        Page<Produto> productPage = produtoRepository.findAll(pageable);
+
+        List<Produto> productList = productPage.getContent();
+        return ResponseEntity.status(HttpStatus.OK).headers(responseHeaders).body(productList); //retorna o status 200 ok e todos os produtos, lista de todos os produtos
     }
 
-    @CrossOrigin(origins = "http://127.0.0.1:5173") // Insira a origem permitida, substituindo o exemplo pelo seu frontend
+    @CrossOrigin(origins = {"http://127.0.0.1:5173","http://127.0.0.1:5174"}) // Insira a origem permitida, substituindo o exemplo pelo seu frontend
     @GetMapping("/products/{id}")//Get = pega o produto
     public ResponseEntity<Produto> getOneProduct(@PathVariable(value="id") UUID id) { //PathVariable = variavel de caminho, e o value é o valor da variavel
         Optional<Produto> productModelOptional = produtoRepository.findById(id);
@@ -57,11 +60,10 @@ public class ProductController {
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
-        productModelOptional.get().add(linkTo(methodOn(ProductController.class).getAllProducts()).withRel("Lista de Produtos"));// LinkTo qual endpoint ou metodo que eu vou redirecionar o cliente/methodoOn = metodo que eu quero redirecionar o cliente
         return ResponseEntity.status(HttpStatus.OK).body(productModelOptional.get());
     }
 
-    @CrossOrigin(origins = "http://127.0.0.1:5173") // Insira a origem permitida, substituindo o exemplo pelo seu frontend
+    @CrossOrigin(origins = {"http://127.0.0.1:5173","http://127.0.0.1:5174"}) // Insira a origem permitida, substituindo o exemplo pelo seu frontend
     @PutMapping("/products/{id}") //Put = atualiza o produto
     public ResponseEntity<Produto> updateProduct(@PathVariable(value="id") UUID id, @RequestBody @Valid ProdutoRecordDto produtoRecordDto) {
         Optional<Produto> productModelOptional = produtoRepository.findById(id); // Verificar se o produto existe
@@ -73,7 +75,7 @@ public class ProductController {
         return ResponseEntity.status(HttpStatus.OK).body(produtoRepository.save(produto));
     }
 
-    @CrossOrigin(origins = "http://127.0.0.1:5173") // Insira a origem permitida, substituindo o exemplo pelo seu frontend
+    @CrossOrigin(origins = {"http://127.0.0.1:5173","http://127.0.0.1:5174"}) // Insira a origem permitida, substituindo o exemplo pelo seu frontend
     @DeleteMapping("/products/{id}") //Delete = deleta o produto
     public ResponseEntity<Void> deleteProduct(@PathVariable(value="id") UUID id) {
         Optional<Produto> productModelOptional = produtoRepository.findById(id); // Verificar se o produto existe
